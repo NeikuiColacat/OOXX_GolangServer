@@ -67,7 +67,42 @@ json格式错误: `400`
 
 成功: `200` 
 
-(返回一个json作为BODY,JSON按照用户积分降序排序展示整张users表)
+(返回一个json作为BODY,JSON按照用户积分降序排序展示整张users表，如下为返回json BODY示例)
+
+```json
+[
+    {
+        "username": "maomao",
+        "password": "lueluelue",
+        "score": 200
+    },
+    {
+        "username": "test",
+        "password": "test",
+        "score": 123
+    },
+    {
+        "username": "john_doe",
+        "password": "secure_password",
+        "score": 100
+    },
+    {
+        "username": "haha",
+        "password": "newpassword",
+        "score": 50
+    },
+    {
+        "username": "colacola",
+        "password": "newpassword",
+        "score": 0
+    },
+    {
+        "username": "newuser",
+        "password": "newpassword",
+        "score": 0
+    }
+]
+```
 
 ## MySQL :: game_db数据库 :: users表如下示例
 
