@@ -12,6 +12,7 @@
 {
     "username": "username",
     "password": "passwd"
+    "repassword": "repasswd"
 }
 
 ```
@@ -38,7 +39,6 @@ json格式错误: `400`
 {
     "username": "username",
     "password": "newpasswd",
-    "repassword": "repasswd"
 }
 
 
