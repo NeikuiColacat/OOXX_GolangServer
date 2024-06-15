@@ -16,6 +16,10 @@ type User struct {
 	Password string `json:"password"`
 	Score    int    `json:"score"`
 }
+type UserScoreUpdate struct {
+	Username string `json:"username"`
+	Score    int    `json:"score"`
+}
 
 func handleLogin(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	var user User
@@ -86,7 +90,34 @@ func handleGetUsers(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(users)
 }
+func handleUpdateScore(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	// Decode the incoming request
+	var update UserScoreUpdate
+	err := json.NewDecoder(r.Body).Decode(&update)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
+	// Prepare the SQL statement
+	stmt, err := db.Prepare("UPDATE users SET score = ? WHERE username = ?")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer stmt.Close()
+
+	// Execute the SQL statement
+	_, err = stmt.Exec(update.Score, update.Username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Send a success response
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Score updated successfully"))
+}
 func setupServer() (*sql.DB, *mux.Router) {
 	// 连接数据库
 	dsn := "root:maomao@tcp(127.0.0.1:3306)/game_db"
@@ -111,6 +142,9 @@ func setupServer() (*sql.DB, *mux.Router) {
 		handleGetUsers(db, w, r)
 	}).Methods("GET")
 
+	r.HandleFunc("/user/score", func(w http.ResponseWriter, r *http.Request) {
+		handleUpdateScore(db, w, r)
+	}).Methods("POST")
 	return db, r
 }
 

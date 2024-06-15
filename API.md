@@ -114,3 +114,28 @@ json格式错误: `400`
 | maomao   | lueluelue       |   200 |
 | newuser  | newpassword     |     0 |
 | test     | test            |   123 |
+
+
+---
+
+## 积分更新 
+
+**URL:**  `http://10.33.74.157:8080/user/score`
+
+**方法:** `POST`
+
+**BODY:**
+
+```json
+{
+    "username": "123",
+    "score": 100
+}
+
+```
+
+**状态码**
+
+成功: `200` 
+
+

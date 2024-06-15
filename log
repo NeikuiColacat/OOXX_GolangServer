@@ -1,0 +1,2 @@
+warning: GOPATH set to GOROOT (/home/cat/go) has no effect
+[mysql] 2024/06/15 11:54:37 connection.go:49: closing bad idle connection: unexpected read from socket
