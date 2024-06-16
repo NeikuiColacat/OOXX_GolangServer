@@ -20,6 +20,12 @@ type UserScoreUpdate struct {
 	Username string `json:"username"`
 	Score    int    `json:"score"`
 }
+type UserQuery struct {
+	Username string `json:"username"`
+}
+type UserScoreResponse struct {
+	Score int `json:"score"`
+}
 
 func handleLogin(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	var user User
@@ -100,7 +106,7 @@ func handleUpdateScore(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prepare the SQL statement
-	stmt, err := db.Prepare("UPDATE users SET score = ? WHERE username = ?")
+	stmt, err := db.Prepare("UPDATE users SET score = score + ? WHERE username = ?")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -117,6 +123,44 @@ func handleUpdateScore(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	// Send a success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Score updated successfully"))
+}
+func handleQueryScore(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	// Decode the incoming request
+	var query UserQuery
+	err := json.NewDecoder(r.Body).Decode(&query)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Prepare the SQL statement
+	stmt, err := db.Prepare("SELECT score FROM users WHERE username = ?")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer stmt.Close()
+
+	// Execute the SQL statement
+	row := stmt.QueryRow(query.Username)
+
+	// Read the result
+	var score int
+	err = row.Scan(&score)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Create the response
+	response := UserScoreResponse{
+		Score: score,
+	}
+
+	// Send a success response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 func setupServer() (*sql.DB, *mux.Router) {
 	// 连接数据库
@@ -145,6 +189,11 @@ func setupServer() (*sql.DB, *mux.Router) {
 	r.HandleFunc("/user/score", func(w http.ResponseWriter, r *http.Request) {
 		handleUpdateScore(db, w, r)
 	}).Methods("POST")
+
+	r.HandleFunc("/user/query", func(w http.ResponseWriter, r *http.Request) {
+		handleQueryScore(db, w, r)
+	}).Methods("POST")
+
 	return db, r
 }
 
