@@ -3,7 +3,7 @@ N 为题目矩阵大小
 alpha为超参数，保证生成题目挖空cell数量不超过alpha,用于控制难度
 成员变量a为一个二维可变数组 , 表示题目答案
 成员变量b为一个二维可变数组，表示生成题目
-1表示挖空 , 0 和 1用于表示 OO和XX ， 依照韩姐喜好自行定义
+1表示挖空 , 0 和 1用于表示 OO和XX ， 依照喜好自行定义
 */
 import kotlin.random.Random
 class problem (var N : Int , val alpha : Int){
