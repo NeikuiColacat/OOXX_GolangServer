@@ -6,8 +6,8 @@ alpha为超参数，保证生成题目挖空cell数量不超过alpha,用于控�
 -1表示挖空 , 0 和 1用于表示 OO和XX ， 依照喜好自行定义
 */
 import kotlin.random.Random
-class problem (var N : Int , val alpha : Int){
-    var a = MutableList(N){MutableList(N){-1} }
+class problem (val N : Int , val alpha : Int){
+    val a = MutableList(N){MutableList(N){-1} }
     var b = MutableList(N){MutableList(N){-1} }
     val s = mutableSetOf<Int>()
     fun ran(mod : Int) :Int{
