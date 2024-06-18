@@ -3,12 +3,14 @@ N 为题目矩阵大小
 alpha为超参数，保证生成题目挖空cell数量不超过alpha,用于控制难度
 成员变量a为一个二维可变数组 , 表示题目答案
 成员变量b为一个二维可变数组，表示生成题目
+成员变量c为一个字符串list，0表示O ， 1表示X ，空格字符表示-1
 -1表示挖空 , 0 和 1用于表示 OO和XX ， 依照喜好自行定义
 */
 import kotlin.random.Random
 class problem (val N : Int , val alpha : Int){
     val a = MutableList(N){MutableList(N){-1} }
     var b = MutableList(N){MutableList(N){-1} }
+    val c = MutableList(0){""}
     val s = mutableSetOf<Int>()
     fun ran(mod : Int) :Int{
         return (Random.nextInt()%mod + mod)%mod
@@ -107,5 +109,6 @@ class problem (val N : Int , val alpha : Int){
         dfs(0,0,0,a)
         b = a.map { it.toMutableList() }.toMutableList()
         modify()
+        for(i in 0..N-1) c.add(b[i].map {if(it == -1)' ' else (if(it == 1) 'X' else 'O')}.joinToString(separator = ""))
     }
 }
