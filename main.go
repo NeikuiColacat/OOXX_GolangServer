@@ -31,15 +31,23 @@ type Response struct {
 	Username string `json:"username"`
 	Match    string `json:"match"`
 }
-
 type Player struct {
 	Username string `json:"username"`
+}
+
+type TimeQueryRequest struct {
+	Username string `json:"username"`
+}
+
+type TimeQueryResponse struct {
+	Time string `json:"time"`
 }
 
 var (
 	matchQueue   []Player
 	matchResults = make(map[string]string)
 	queueLock    sync.Mutex
+	userTimes    = make(map[string]string)
 )
 
 func handleLogin(db *sql.DB, w http.ResponseWriter, r *http.Request) {
@@ -259,6 +267,43 @@ func handleRemovePlayerFromMatch(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf("Player %s and their match %s have been removed from the match queue", player.Username, matchUsername)))
 }
+func handleUserTime(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var requestData struct {
+		Username string `json:"username"`
+		Time     string `json:"time"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userTimes[requestData.Username] = requestData.Time
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Time recorded successfully"))
+}
+func handleQueryTime(w http.ResponseWriter, r *http.Request) {
+	var req TimeQueryRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	time, ok := userTimes[req.Username]
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+
+	resp := TimeQueryResponse{Time: time}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
 func setupServer() (*sql.DB, *mux.Router) {
 	// 连接数据库
 	dsn := "root:maomao@tcp(127.0.0.1:3306)/game_db"
@@ -294,6 +339,10 @@ func setupServer() (*sql.DB, *mux.Router) {
 	r.HandleFunc("/user/query_queue", handleJoinMatchQueue).Methods("POST")
 	r.HandleFunc("/user/query_match", handleQueryMatchResult).Methods("POST")
 	r.HandleFunc("/user/query_remove", handleRemovePlayerFromMatch).Methods("POST")
+	r.HandleFunc("/user/time", handleUserTime).Methods("POST")
+	r.HandleFunc("/user/query_time", func(w http.ResponseWriter, r *http.Request) {
+		handleQueryTime(w, r)
+	}).Methods("POST")
 	return db, r
 }
 
