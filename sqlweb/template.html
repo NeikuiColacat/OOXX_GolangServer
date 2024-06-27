@@ -1,9 +1,13 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
-
+        
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(to right, #ff9a9e, #fad0c4);
@@ -46,7 +50,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
             box-sizing: border-box;
-            margin-top: 180px; /* Increased margin-top for more space */
+            margin-top: 180px;
             animation: fadeIn 1.5s ease-in;
             position: relative;
             z-index: 10;
@@ -89,15 +93,90 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
+        .editable {
+            cursor: pointer;
+        }
+        .editable input {
+            border: none;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: inherit;
+            font-family: inherit;
+            padding: 8px;
+            outline: none;
+        }
+        .editable input:hover,
+        .editable input:focus {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
     <div class="header">OOXX</div>
     <div class="container">
         <table>
-            <tr><th>Username</th><th>Password</th><th>Score</th></tr>
+            <tr>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Score</th>
+            </tr>
             {{TABLE_ROWS}}
         </table>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cells = document.querySelectorAll('.editable');
+
+            cells.forEach(cell => {
+                cell.addEventListener('click', function() {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = this.innerText.trim();
+                    this.innerHTML = '';
+                    this.appendChild(input);
+                    input.focus();
+
+                    input.addEventListener('blur', () => {
+                        const newValue = input.value.trim();
+                        this.innerHTML = newValue;
+                        // 发送更新请求到服务器
+                        const username = this.parentElement.children[0].innerText.trim();
+                        const field = this.dataset.field;
+                        updateDatabase(username, field, newValue);
+                    });
+
+                    input.addEventListener('keyup', function(event) {
+                        if (event.key === 'Enter') {
+                            input.blur();
+                        }
+                    });
+                });
+            });
+
+            function updateDatabase(username, field, value) {
+                fetch('/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        field: field,
+                        value: value
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    console.log('Database updated successfully');
+                })
+                .catch(error => {
+                    console.error('Error updating database:', error);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
+
