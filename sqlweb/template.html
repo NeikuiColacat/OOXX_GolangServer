@@ -1,13 +1,9 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
-        
+
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(to right, #ff9a9e, #fad0c4);
@@ -54,6 +50,8 @@
             animation: fadeIn 1.5s ease-in;
             position: relative;
             z-index: 10;
+            max-height: 600px; /* 设置最大高度 */
+            overflow-y: auto; /* 启用垂直滚动条 */
         }
         @keyframes fadeIn {
             from {
@@ -124,6 +122,7 @@
         </table>
     </div>
     <script>
+        // JavaScript 代码
         document.addEventListener('DOMContentLoaded', function() {
             const cells = document.querySelectorAll('.editable');
 
@@ -141,7 +140,7 @@
                         this.innerHTML = newValue;
                         // 发送更新请求到服务器
                         const username = this.parentElement.children[0].innerText.trim();
-                        const field = this.dataset.field;
+                        const field = this.getAttribute('data-field');
                         updateDatabase(username, field, newValue);
                     });
 
@@ -179,4 +178,3 @@
     </script>
 </body>
 </html>
-

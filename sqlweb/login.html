@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -79,25 +78,19 @@
         input[type="submit"]:hover {
             background-color: #45a049;
         }
-        .error-message {
-            color: red;
-            font-size: 1.2em;
-            text-align: center;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
     <div class="header">Login</div>
     <div class="container">
         <form method="POST" action="/login">
+            {{ERROR_MSG}}
             <label for="username" style="font-size: 1.2em;">Username:</label>
-            <input type="text" id="username" name="username" required><br>
+            <input type="text" id="username" name="username"><br>
             <label for="password" style="font-size: 1.2em;">Password:</label>
-            <input type="password" id="password" name="password" required><br>
+            <input type="password" id="password" name="password"><br>
             <input type="submit" value="Login">
         </form>
-        <div class="error-message">{{ERROR_MESSAGE}}</div>
     </div>
 </body>
 </html>

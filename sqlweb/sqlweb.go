@@ -68,16 +68,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			http.SetCookie(w, &cookie)
 			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		} else {
-			// 登录失败，返回登录页面并显示错误信息
-			html, err := ioutil.ReadFile("login.html")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			pageContent := strings.Replace(string(html), "{{ERROR_MESSAGE}}", "Invalid username or password", -1)
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintf(w, pageContent)
+			// 返回登录页面并显示错误消息
+			http.Redirect(w, r, "/login?error=1", http.StatusSeeOther)
 		}
 		return
 	}
@@ -88,9 +80,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	pageContent := strings.Replace(string(html), "{{ERROR_MESSAGE}}", "", -1)
+
+	// 检查是否有错误消息
+	var pageContent string
+	if r.URL.Query().Get("error") == "1" {
+		errorMsg := "<p style='color: red;'>Invalid username or password. Please try again.</p>"
+		pageContent = strings.Replace(string(html), "{{ERROR_MSG}}", errorMsg, 1)
+	} else {
+		pageContent = strings.Replace(string(html), "{{ERROR_MSG}}", "", 1)
+	}
+
+	// 将页面内容写入响应
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, pageContent)
+	fmt.Fprint(w, pageContent)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +128,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tableRows += fmt.Sprintf("<tr><td>%s</td><td class='editable' data-username='%s' data-field='password'>%s</td><td class='editable' data-username='%s' data-field='score'>%d</td></tr>", username, username, password, username, score)
+		tableRows += fmt.Sprintf("<tr><td>%s</td><td class='editable' data-field='password'>%s</td><td class='editable' data-field='score'>%d</td></tr>", username, password, score)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -149,13 +151,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct {
+	var updateData struct {
 		Username string `json:"username"`
 		Field    string `json:"field"`
 		Value    string `json:"value"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&data)
+	err := json.NewDecoder(r.Body).Decode(&updateData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -164,8 +166,15 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	defer db.Close()
 
-	query := fmt.Sprintf("UPDATE users SET %s = ? WHERE username = ?", data.Field)
-	_, err = db.Exec(query, data.Value, data.Username)
+	query := fmt.Sprintf("UPDATE users SET %s = ? WHERE username = ?", updateData.Field)
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(updateData.Value, updateData.Username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -203,9 +212,9 @@ func getLoggedInUsername(r *http.Request) (string, error) {
 
 func main() {
 	http.HandleFunc("/", handler)
-	http.HandleFunc("/login", loginHandler)   // 添加登录页面的处理路由
-	http.HandleFunc("/dashboard", handler)    // 登录成功后跳转到的页面路由
-	http.HandleFunc("/update", updateHandler) // 更新数据库的处理路由
+	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/dashboard", handler)
+	http.HandleFunc("/update", updateHandler)
 	log.Println("Server started on: http://localhost:8081")
 	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
